@@ -40,7 +40,7 @@ git clone https://github.com/dysentry30/Cashier-System.git
 **This application is not working perfectly or under development please wait until production.**
 
 ## TODO LIST <a name = "todo_list"></a>
-- [*] Dashboard Page
+- [x] Dashboard Page
 - [ ] Confirmation Payment Page
 - [ ] Add Item Function
 - [ ] Clear Item Function
