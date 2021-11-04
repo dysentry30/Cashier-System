@@ -42,8 +42,8 @@ git clone https://github.com/dysentry30/Cashier-System.git
 ## TODO LIST <a name = "todo_list"></a>
 - [x] Dashboard Page
 - [ ] Confirmation Payment Page
-- [ ] Add Item Function
-- [ ] Clear Item Function
-- [ ] Clear All Item Function
+- [x] Add Item Function
+- [x] Clear Item Function
+- [x] Clear All Item Function
 - [ ] Pay Function
 - [ ] Confirm Function

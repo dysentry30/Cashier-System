@@ -108,9 +108,22 @@ server.post("/get-user", (req, res) => {
 });
 
 server.post("/delete-item", (req, res) => {
-    const idProduct = req.body.idProduct;
+    const idProduct = parseInt(req.body.idProduct);
     // const itemIndex = itemsProduct.findIndex(item => item !== idProduct);
-    itemsProduct = itemsProduct.filter(item => item != idProduct);
+    itemsProduct.forEach(product => {
+        if (product.quantity < 2 && product.id_product == idProduct) {
+            itemsProduct = itemsProduct.filter(item => item.id_product != idProduct);
+            return;
+        }
+        if(product.id_product == idProduct) {
+            console.log(product);
+            product.quantity--;
+            console.log(product);
+        }
+        // const existingItem = itemsProduct.find(product => product.id_product == idProduct);
+        // const existingItemIndex = itemsProduct.findIndex(product => product.id_product == idProduct);
+        // itemsProduct.splice(existingItemIndex, 1, existingItem);
+    })
     res.json({
         status: "Success",
         message: "This is your items",
@@ -134,13 +147,34 @@ server.post("/logout", (req, res) => {
 });
 
 server.post("/add-item", (req, res) => {
-    const idProduct = req.body.idProduct;
-    itemsProduct.push(idProduct);
-    res.json({
-        status: "Success",
-        message: "Item has been added",
-        itemsProduct
-    });
+    const idProduct = parseInt(req.body.idProduct);
+    const query = `SELECT name, price, id_product FROM products WHERE id_product = ${idProduct}`;
+    logisticDB.query(query, (err, rows) => {
+        if (err) throw err;
+        if (rows[0]) {
+            const existingItem = itemsProduct.find(product => product.id_product == idProduct);
+            const existingItemIndex = itemsProduct.findIndex(product => product.id_product == idProduct);
+            console.log(existingItem, existingItemIndex);
+            if (existingItem) {
+                existingItem.quantity++;
+                itemsProduct.splice(existingItemIndex, 1, existingItem);
+            } else {
+                rows[0].quantity = 1;
+                itemsProduct.push(rows[0]);
+            }
+
+            res.json({
+                status: "Success",
+                message: "Item has been added",
+                itemsProduct
+            });
+        } else {
+            res.json({
+                status: "Failed",
+                message: "Item added unsuccessful",
+            });
+        }
+    })
 });
 
 server.post("/clear-all-items", (req, res) => {
@@ -149,6 +183,7 @@ server.post("/clear-all-items", (req, res) => {
         res.json({
             status: "Success",
             message: "All items has been cleared",
+            itemsProduct
         })
     } else {
         res.json({
