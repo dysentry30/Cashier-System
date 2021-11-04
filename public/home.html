@@ -12,7 +12,20 @@
 
 <style>
     .hide {
-        display: none;
+        display: none !important;
+    }
+
+    .loading {
+        width: 100%;
+        height: 100vh;
+        background: rgb(255, 255, 255);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 1px solid red;
+        z-index: 3;
+        transition: all 500ms ease-in-out;
     }
 </style>
 
@@ -24,8 +37,11 @@
                     <h4><b>Personal Info</b></h4>
                 </div>
                 <div class="card-body">
-                    <h6>ID: <b>4654654</b></h6>
-                    <h6>Name: <b>test</b></h6>
+                    <h6>ID: <b id="id-user"></b></h6>
+                    <h6>Name: <b id="name-user"></b></h6>
+                    <div class="d-grid">
+                        <button type="button" onclick="userLogout()" class="btn btn-danger">Logout</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -36,31 +52,26 @@
                     <h4><b>Scan Product</b></h4>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group list-group-numbered mb-2">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <h6 style="max-width: 200px;">Product name</h6>
-                            <h6>Quantity</h6>
-                            <h6><b>Rp 200000</b></h6>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <h6 style="max-width: 200px;">Product name</h6>
-                            <h6>Quantity</h6>
-                            <h6><b>Rp 200000</b></h6>
-                        </li>
-                      </ul>
-                      <div class="d-flex justify-content-between">
+                    <ul class="list-group list-group-numbered overflow-scroll" id="list-items"
+                        style="max-height: 70vh;scroll-behavior: smooth;">
+                    </ul>
+                    <h6 class="text-center" id="empty-msg">This item is still empty. Try to scan or input the id product
+                        in to scan product section</h6>
 
-                      </div>
+                    <div class="d-flex justify-content-between align-items-center hide" id="total">
+                        <h6>Total</h6>
+                        <h4><b>Rp 546546546</b></h4>
+                    </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary mb-2">Pay</button>
-                        <button class="btn btn-danger">Clear all items</button>
+                        <button class="btn btn-danger" onclick="clearAllItems()">Clear all items</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="scan-content" style="position: relative; transform: translateY(-45%);">
+    <div class="scan-content" style="position: absolute; top: 14rem; width: 81%;">
         <div class="row">
             <div class="col-3">
                 <div class="card">
@@ -70,13 +81,22 @@
                     <div class="card-body">
                         <form autocomplete="off">
                             <label for="id-product">ID Product</label>
-                            <input type="text" name="id-product" id="id-product" class="form-control mb-2" />
-                            <div class="d-grid">
+                            <input type="text" name="id-product" id="id-product" class="form-control" />
+                            <small id="error-msg" class="text-danger"></small>
+                            <div class="d-grid mt-2">
                                 <button type="submit" class="btn btn-primary">Add Item</button>
                             </div>
                         </form>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading">
+        <div class="position-absolute top-50 start-50 translate-middle">
+            <div class="spinner-border" style="width: 5rem;height: 5rem;">
+
             </div>
         </div>
     </div>
