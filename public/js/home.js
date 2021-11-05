@@ -1,5 +1,5 @@
 const form = document.querySelector("form");
-
+let itemsProduct = [];
 fetch("/get-user", {
         method: "POST",
         headers: {
@@ -28,7 +28,7 @@ form.addEventListener("submit", async e => {
         return;
     }
 
-    if(idProduct.match(/\D/gi)) {
+    if (idProduct.match(/\D/gi)) {
         document.querySelector("#error-msg").classList.remove("hide");
         document.querySelector("#error-msg").textContent = "This field must be filled with number only";
         document.querySelector("#id-product").classList.add("border-danger");
@@ -53,6 +53,7 @@ const deleteItem = async (e) => {
             idProduct
         },
     });
+    itemsProduct = [...result.itemsProduct];
     return showData(result.itemsProduct);
 }
 
@@ -95,6 +96,7 @@ const clearAllItems = async () => {
     const result = await myFetch({
         url: "/clear-all-items"
     });
+    itemsProduct = [...result.itemsProduct];
     showData(result.itemsProduct);
     return;
 }
@@ -125,9 +127,13 @@ const myFetch = async ({
 }
 
 const addItems = async (idProduct) => {
-    const result = await myFetch({ url: "/add-item", body: {
-        idProduct
-    }})
+    const result = await myFetch({
+        url: "/add-item",
+        body: {
+            idProduct
+        }
+    })
+    itemsProduct = [...result.itemsProduct];
     return result;
 }
 
@@ -151,3 +157,76 @@ const userLogout = () => {
             });
         })
 }
+
+const confirmDialog = () => {
+    let confirmDialog = new bootstrap.Modal(document.getElementById('confirmDialog'));
+    let emptyDialog = new bootstrap.Modal(document.getElementById("emptyDialog"));
+
+    let html = ""
+
+    if (itemsProduct.length > 0) {
+        let totalPrice = 0;
+        itemsProduct.forEach(item => {
+            const price = Intl.NumberFormat("id").format(item.price.toString());
+            const totalPricePerItem = item.price * item.quantity;
+            totalPrice += totalPricePerItem;
+            const totalPricePerItemFormatted = Intl.NumberFormat("id").format(totalPricePerItem.toString());
+            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+            <h6 style="max-width: 80px;">${item.name}</h6>
+            <h6>${item.quantity}</h6>
+            <div class="row">
+                <h6><b>Rp ${totalPricePerItemFormatted}</b></h6>
+                <small class="text-muted"><b>Rp ${price}</b> per item</small>
+            </div>
+        </li>`
+        });
+
+        const totalPriceFormatted = Intl.NumberFormat("id").format(totalPrice.toString());
+        document.querySelector("#total-price-confirm").textContent = `Rp ${totalPriceFormatted}`;
+        document.querySelector("#list-items-confirm").innerHTML = html;
+
+        confirmDialog.show();
+    } else {
+        emptyDialog.show();
+        return;
+    }
+}
+
+const paymentTab = new bootstrap.Tab(document.querySelector("#payment-tab"));
+const confirmTab = new bootstrap.Tab(document.querySelector("#confirm-tab"));
+
+document.querySelector("#btn-next").addEventListener("click", e => {
+    document.querySelector(".progress-bar").setAttribute("aria-valuenow", 50);
+    document.querySelector(".progress-bar").style.width = "50%";
+    document.querySelector(".progress-bar").textContent = "50%";
+
+    document.querySelector("#btn-next").classList.add("hide");
+    document.querySelector("#btn-confirm").classList.remove("hide");
+
+    document.querySelector("#text-confirm").classList.add("text-primary");
+
+
+    paymentTab.show();
+    document.querySelector("#btn-cancel").classList.add("hide");
+    document.querySelector("#btn-back").classList.remove("hide");
+
+    document.querySelector("#btn-back").addEventListener("show.bs.tab", e => {
+        // paymentTab.
+        confirmTab.show();
+        document.querySelector(".progress-bar").setAttribute("aria-valuenow", 0);
+        document.querySelector(".progress-bar").style.width = "0%";
+        document.querySelector(".progress-bar").textContent = "0%";
+
+        document.querySelector("#btn-cancel").classList.remove("hide");
+        document.querySelector("#btn-back").classList.add("hide");
+        document.querySelector("#btn-next").classList.remove("hide");
+        document.querySelector("#btn-confirm").classList.add("hide");
+        document.querySelector("#text-confirm").classList.remove("text-primary");
+    });
+
+});
+
+// document.querySelector("#btn-back").addEventListener("show.bs.tab", e => {
+//     // paymentTab.
+//     confirmTab.show();
+// });
