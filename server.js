@@ -75,6 +75,12 @@ server.get("/", checkUserSession, (req, res) => {
     res.sendFile(`${__dirname}/public/home.html`);
 });
 
+server.post("/add-transaction", (req, res) => {
+    const transaction = req.body;
+    console.log(transaction);
+    res.json(transaction);
+})
+
 server.post("/login", (req, res) => {
     const {
         username,
@@ -85,7 +91,9 @@ server.post("/login", (req, res) => {
         if (err) throw err;
         if (rows[0]) {
             req.session.user = rows[0];
-            req.session.save(err => console.log(err));
+            req.session.save(err => {
+                if(err) throw err;
+            });
             res.json(rows[0]);
         } else {
             res.json({
@@ -116,9 +124,7 @@ server.post("/delete-item", (req, res) => {
             return;
         }
         if(product.id_product == idProduct) {
-            console.log(product);
             product.quantity--;
-            console.log(product);
         }
         // const existingItem = itemsProduct.find(product => product.id_product == idProduct);
         // const existingItemIndex = itemsProduct.findIndex(product => product.id_product == idProduct);
@@ -154,7 +160,6 @@ server.post("/add-item", (req, res) => {
         if (rows[0]) {
             const existingItem = itemsProduct.find(product => product.id_product == idProduct);
             const existingItemIndex = itemsProduct.findIndex(product => product.id_product == idProduct);
-            console.log(existingItem, existingItemIndex);
             if (existingItem) {
                 existingItem.quantity++;
                 itemsProduct.splice(existingItemIndex, 1, existingItem);

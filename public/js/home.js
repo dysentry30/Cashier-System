@@ -1,5 +1,6 @@
 const form = document.querySelector("form");
 let itemsProduct = [];
+let myUser = {};
 fetch("/get-user", {
         method: "POST",
         headers: {
@@ -8,6 +9,10 @@ fetch("/get-user", {
     })
     .then(resolve => resolve.json())
     .then(user => {
+        myUser = {
+            id_user: user.id_user,
+            name: user.name
+        };
         document.querySelector("#id-user").textContent = user.id_user;
         document.querySelector("#name-user").textContent = user.name;
         document.querySelector(".loading").style.opacity = 0;
@@ -109,16 +114,26 @@ const myFetch = async ({
         const result = await fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Pragma": "no-cache",
+                "Cache-Control": "no-cache",
+                'Expires': '0',
             },
+            cache: "no-cache",
         }).then(resolve => resolve.json());
         return result;
     }
     const result = await fetch(url, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Pragma": "no-cache",
+            "Cache-Control": {
+                "Max-Age": 0
+            },
+            'Expires': 0,
         },
+        cache: "no-cache",
         body: JSON.stringify({
             ...body
         }),
@@ -162,6 +177,12 @@ const confirmDialog = () => {
     let confirmDialog = new bootstrap.Modal(document.getElementById('confirmDialog'));
     let emptyDialog = new bootstrap.Modal(document.getElementById("emptyDialog"));
 
+    document.querySelector("#text-confirm").classList.add("text-primary");
+    document.querySelector(".progress-bar").setAttribute("aria-valuenow", 50);
+    document.querySelector(".progress-bar").style.width = "50%";
+    document.querySelector(".progress-bar").textContent = "50%";
+
+
     let html = ""
 
     if (itemsProduct.length > 0) {
@@ -186,45 +207,139 @@ const confirmDialog = () => {
         document.querySelector("#list-items-confirm").innerHTML = html;
 
         confirmDialog.show();
+
+        const paymentTab = new bootstrap.Tab(document.querySelector("#payment-tab"));
+        const confirmTab = new bootstrap.Tab(document.querySelector("#confirm-tab"));
+        const addTransaction = async e => {
+            e.preventDefault();
+            if (parseInt(amount) == 0 || parseInt(amount) < totalPrice) {
+                console.log("error");
+                return;
+            }
+            const transaction = {
+                itemsProduct,
+                user: myUser,
+                amount: parseInt(amount),
+                totalPrice
+
+            };
+            const result = await myFetch({
+                url: "/add-transaction",
+                body: transaction
+            });
+            console.log(result);
+            await clearAllItems()
+            amount = 0;
+            totalPrice = 0;
+            document.querySelector("#btn-confirm").removeEventListener("click", addTransaction);
+            document.querySelector("#btn-back").click();
+            document.querySelector("#btn-cancel").click();
+
+            return;
+        };
+
+        document.querySelector("#btn-next").addEventListener("click", e => {
+            document.querySelector(".progress-bar").setAttribute("aria-valuenow", 100);
+            document.querySelector(".progress-bar").style.width = "100%";
+            document.querySelector(".progress-bar").textContent = "100%";
+
+            document.querySelector("#btn-next").classList.add("hide");
+            document.querySelector("#btn-confirm").classList.remove("hide");
+
+            document.querySelector("#text-payment").classList.add("text-primary");
+
+            document.querySelector("#total-price-payment").textContent = `Rp ${totalPriceFormatted}`;
+
+
+            paymentTab.show();
+            document.querySelector("#btn-cancel").classList.add("hide");
+            document.querySelector("#btn-back").classList.remove("hide");
+
+            document.querySelector("#btn-back").addEventListener("show.bs.tab", e => {
+                // paymentTab.
+                confirmTab.show();
+                document.querySelector(".progress-bar").setAttribute("aria-valuenow", 0);
+                document.querySelector(".progress-bar").style.width = "0%";
+                document.querySelector(".progress-bar").textContent = "0%";
+
+                document.querySelector("#btn-cancel").classList.remove("hide");
+                document.querySelector("#btn-back").classList.add("hide");
+                document.querySelector("#btn-next").classList.remove("hide");
+                document.querySelector("#btn-confirm").classList.add("hide");
+
+                document.querySelector("#text-payment").classList.remove("text-primary");
+                document.querySelector(".progress-bar").setAttribute("aria-valuenow", 50);
+                document.querySelector(".progress-bar").style.width = "50%";
+                document.querySelector(".progress-bar").textContent = "50%";
+
+            });
+
+        });
+
+        document.querySelector("#btn-cancel").addEventListener("click", e => {
+            document.querySelector("#id-product").focus();
+        });
+
+        document.querySelector("#price-pay").value = "0";
+        const amountValue = parseInt(document.querySelector("#price-pay").value);
+        if (amountValue === 0) {
+            // document.querySelector("#btn-confirm").removeEventListener("click", this.event);
+            // document.querySelector("#btn-confirm").classList.add("disabled");
+            document.querySelector("#changes-text").textContent = `Rp 0`;
+        }
+
+        if ((amountValue < totalPrice)) {
+            // document.querySelector("#btn-confirm").removeEventListener("click", this.event);
+            document.querySelector("#btn-confirm").classList.add("disabled");
+            document.querySelector("#payment-error").textContent = "Amount must be greater than total price";
+            document.querySelector("#payment-error").classList.remove("hide");
+            document.querySelector("#price-pay").classList.add("border-danger");
+            document.querySelector("#changes-text").textContent = `Rp 0`;
+        }
+
+        let amount = 0;
+        document.querySelector("#price-pay").addEventListener("keyup", e => {
+            amount = e.target.value.toString().replaceAll(new RegExp(/\D/gi), "").trim();
+            const moneyChanges = amount - totalPrice;
+            const amountFormatted = Intl.NumberFormat("id").format(amount.toString());
+            const moneyChangesFormatted = Intl.NumberFormat("id").format(moneyChanges.toString());
+            document.querySelector("#price-pay").value = amountFormatted;
+
+            if (!amount || document.querySelector("#btn-confirm").removeEventListener("click", this.event)) {
+                document.querySelector("#btn-confirm").removeEventListener("click", this.event);
+                document.querySelector("#btn-confirm").classList.add("disabled");
+                document.querySelector("#changes-text").textContent = `Rp 0`;
+                return;
+            }
+
+            if ((amount < totalPrice) || document.querySelector("#btn-confirm").removeEventListener("click", this.event)) {
+                document.querySelector("#btn-confirm").removeEventListener("click", this.event);
+                document.querySelector("#btn-confirm").classList.add("disabled");
+                document.querySelector("#payment-error").textContent = "Amount must be greater than total price";
+                document.querySelector("#payment-error").classList.remove("hide");
+                document.querySelector("#price-pay").classList.add("border-danger");
+                document.querySelector("#changes-text").textContent = `Rp 0`;
+                return;
+            }
+            document.querySelector("#btn-confirm").classList.remove("disabled");
+            document.querySelector("#payment-error").textContent = "";
+            document.querySelector("#payment-error").classList.add("hide");
+            document.querySelector("#price-pay").classList.remove("border-danger");
+            document.querySelector("#changes-text").textContent = `Rp ${moneyChangesFormatted}`;
+
+            return;
+        });
+
+        document.querySelector("#btn-confirm").addEventListener("click", addTransaction);
+
     } else {
         emptyDialog.show();
         return;
     }
 }
 
-const paymentTab = new bootstrap.Tab(document.querySelector("#payment-tab"));
-const confirmTab = new bootstrap.Tab(document.querySelector("#confirm-tab"));
-
-document.querySelector("#btn-next").addEventListener("click", e => {
-    document.querySelector(".progress-bar").setAttribute("aria-valuenow", 50);
-    document.querySelector(".progress-bar").style.width = "50%";
-    document.querySelector(".progress-bar").textContent = "50%";
-
-    document.querySelector("#btn-next").classList.add("hide");
-    document.querySelector("#btn-confirm").classList.remove("hide");
-
-    document.querySelector("#text-confirm").classList.add("text-primary");
 
 
-    paymentTab.show();
-    document.querySelector("#btn-cancel").classList.add("hide");
-    document.querySelector("#btn-back").classList.remove("hide");
-
-    document.querySelector("#btn-back").addEventListener("show.bs.tab", e => {
-        // paymentTab.
-        confirmTab.show();
-        document.querySelector(".progress-bar").setAttribute("aria-valuenow", 0);
-        document.querySelector(".progress-bar").style.width = "0%";
-        document.querySelector(".progress-bar").textContent = "0%";
-
-        document.querySelector("#btn-cancel").classList.remove("hide");
-        document.querySelector("#btn-back").classList.add("hide");
-        document.querySelector("#btn-next").classList.remove("hide");
-        document.querySelector("#btn-confirm").classList.add("hide");
-        document.querySelector("#text-confirm").classList.remove("text-primary");
-    });
-
-});
 
 // document.querySelector("#btn-back").addEventListener("show.bs.tab", e => {
 //     // paymentTab.
