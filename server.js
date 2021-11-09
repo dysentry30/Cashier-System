@@ -2,7 +2,7 @@ const express = require("express");
 const sql = require("mysql2");
 const sessionMysql = require("mysql2/promise");
 const sessionManager = require("express-session");
-const uid = require("uuid");
+const uuid = require("uuid");
 
 
 const server = express();
@@ -21,7 +21,7 @@ let itemsProduct = [];
 
 const mySession = sessionManager({
     secret: "thisismysecretsession",
-    genid: () => uid.v4(),
+    genid: () => uuid.v4(),
     saveUninitialized: true,
     resave: false,
     cookie: {
@@ -77,15 +77,34 @@ server.get("/", checkUserSession, (req, res) => {
 
 server.post("/add-transaction", (req, res) => {
     const transaction = req.body;
-    console.log(transaction);
-    res.json(transaction);
+    const query = `INSERT INTO transactions(id_transaction, id_user, products, amount_pay, total_price) VALUES("${uuid.v4()}", ${transaction.user.id_user}, '${JSON.stringify(transaction.itemsProduct[0])}', ${transaction.amount}, ${transaction.totalPrice})`
+    const changes = transaction.amount - transaction.totalPrice;
+    cashierDB.query(query, (err, result) => {
+        if(err) {
+            res.json({
+                status: "Error",
+                message: "There is an error while adding this transaction.",
+                errorMessage: Buffer.from(err.message).toString("base64"),
+            });
+            // throw err;
+            return false;
+        };
+        if(result.affectedRows > 0) {
+            return res.json({
+                status: "Success",
+                message: "These products has been added to transactions history.",
+                changes,
+            });
+        }
+        
+    })
 })
 
 server.post("/login", (req, res) => {
     const {
         username,
         password
-    } = req.body;
+    } = req.body; 
     const query = `SELECT * FROM users WHERE username="${username.toString().trim()}" AND username="${password.toString().trim()}"`
     cashierDB.query(query, (err, rows) => {
         if (err) throw err;

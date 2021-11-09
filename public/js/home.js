@@ -173,6 +173,11 @@ const userLogout = () => {
         })
 }
 
+const scanInputFocus = () => {
+    document.querySelector("#id-product").focus();
+    return;
+}
+
 const confirmDialog = () => {
     let confirmDialog = new bootstrap.Modal(document.getElementById('confirmDialog'));
     let emptyDialog = new bootstrap.Modal(document.getElementById("emptyDialog"));
@@ -227,14 +232,28 @@ const confirmDialog = () => {
                 url: "/add-transaction",
                 body: transaction
             });
-            console.log(result);
+            if (result.status === "Success") {
+                const changesFormatted = Intl.NumberFormat("id").format(result.changes.toString());
+                Swal.fire({
+                    icon: result.status.toLowerCase(),
+                    title: result.status,
+                    html: `${result.message}\nChanges: <u><b>Rp ${changesFormatted}</b></u>`,
+                });
+            } else {
+                Swal.fire({
+                    icon: result.status.toLowerCase(),
+                    title: result.status,
+                    html: `${result.message}\n<div class="d-grid mt-2">
+                    <button data-error="${result.errorMessage}" onclick="reportError()" class="btn btn-link">Report this error</button>
+                </div>`,
+                });
+            }
             await clearAllItems()
             amount = 0;
             totalPrice = 0;
             document.querySelector("#btn-confirm").removeEventListener("click", addTransaction);
             document.querySelector("#btn-back").click();
             document.querySelector("#btn-cancel").click();
-
             return;
         };
 
