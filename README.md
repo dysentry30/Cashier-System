@@ -48,5 +48,8 @@ git clone https://github.com/dysentry30/Cashier-System.git
 - [x] Clear All Item Function
 - [x] Pay Function
 - [x] Confirm Function
-- [ ] Add Staf Page
+- [x] Add Staf Page
 - [ ] Add Staf Function
+- [ ] Transactions Page
+- [ ] Transactions Function
+- [ ] Print Function

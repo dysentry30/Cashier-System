@@ -75,12 +75,44 @@ server.get("/", checkUserSession, (req, res) => {
     res.sendFile(`${__dirname}/public/home.html`);
 });
 
+server.get("/add-staff", checkUserSession, (req, res) => {
+    res.sendFile(`${__dirname}/public/add-staff.html`);
+})
+
+server.post("/find-username", (req, res) => {
+    const username = req.body.username;
+    console.log(username);
+    const query = `SELECT username FROM users WHERE username = "${username}"`;
+    cashierDB.query(query, (err, rows) => {
+        if (err) {
+            res.json({
+                status: "Error",
+                errorMessage: Buffer.from(err.message).toString("base64"),
+            });
+            return;
+        }
+
+        if (rows[0]) {
+            res.json({
+                status: "Found",
+                message: "This username is already taken"
+            });
+            return;
+        }
+        res.json({
+            status: "Success",
+            message: "You can use this username"
+        });
+        return;
+    });
+})
+
 server.post("/add-transaction", (req, res) => {
     const transaction = req.body;
     const query = `INSERT INTO transactions(id_transaction, id_user, products, amount_pay, total_price) VALUES("${uuid.v4()}", ${transaction.user.id_user}, '${JSON.stringify(transaction.itemsProduct[0])}', ${transaction.amount}, ${transaction.totalPrice})`
     const changes = transaction.amount - transaction.totalPrice;
     cashierDB.query(query, (err, result) => {
-        if(err) {
+        if (err) {
             res.json({
                 status: "Error",
                 message: "There is an error while adding this transaction.",
@@ -89,14 +121,14 @@ server.post("/add-transaction", (req, res) => {
             // throw err;
             return false;
         };
-        if(result.affectedRows > 0) {
+        if (result.affectedRows > 0) {
             return res.json({
                 status: "Success",
                 message: "These products has been added to transactions history.",
                 changes,
             });
         }
-        
+
     })
 })
 
@@ -104,14 +136,14 @@ server.post("/login", (req, res) => {
     const {
         username,
         password
-    } = req.body; 
+    } = req.body;
     const query = `SELECT * FROM users WHERE username="${username.toString().trim()}" AND username="${password.toString().trim()}"`
     cashierDB.query(query, (err, rows) => {
         if (err) throw err;
         if (rows[0]) {
             req.session.user = rows[0];
             req.session.save(err => {
-                if(err) throw err;
+                if (err) throw err;
             });
             res.json(rows[0]);
         } else {
@@ -142,7 +174,7 @@ server.post("/delete-item", (req, res) => {
             itemsProduct = itemsProduct.filter(item => item.id_product != idProduct);
             return;
         }
-        if(product.id_product == idProduct) {
+        if (product.id_product == idProduct) {
             product.quantity--;
         }
         // const existingItem = itemsProduct.find(product => product.id_product == idProduct);

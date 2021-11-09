@@ -106,41 +106,6 @@ const clearAllItems = async () => {
     return;
 }
 
-const myFetch = async ({
-    url,
-    body
-}) => {
-    if (!body) {
-        const result = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Pragma": "no-cache",
-                "Cache-Control": "no-cache",
-                'Expires': '0',
-            },
-            cache: "no-cache",
-        }).then(resolve => resolve.json());
-        return result;
-    }
-    const result = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Pragma": "no-cache",
-            "Cache-Control": {
-                "Max-Age": 0
-            },
-            'Expires': 0,
-        },
-        cache: "no-cache",
-        body: JSON.stringify({
-            ...body
-        }),
-    }).then(resolve => resolve.json());
-    return result;
-}
-
 const addItems = async (idProduct) => {
     const result = await myFetch({
         url: "/add-item",
@@ -243,8 +208,8 @@ const confirmDialog = () => {
                 Swal.fire({
                     icon: result.status.toLowerCase(),
                     title: result.status,
-                    html: `${result.message}\n<div class="d-grid mt-2">
-                    <button data-error="${result.errorMessage}" onclick="reportError()" class="btn btn-link">Report this error</button>
+                    html: `${result.errorMessage}\n<div class="d-grid mt-2">
+                    <button data-error="${result.errorMessage}" onclick="reportError(this)" class="btn btn-link">Report this error</button>
                 </div>`,
                 });
             }
