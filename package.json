@@ -15,6 +15,7 @@
     "express-mysql-session": "^2.1.7",
     "express-session": "^1.17.2",
     "mysql2": "^2.3.2",
+    "mysqldump": "^3.2.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
